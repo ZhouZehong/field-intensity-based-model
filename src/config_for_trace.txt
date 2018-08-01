@@ -1,0 +1,35 @@
+# network size
+SIZE 5000
+
+# parameters of periodic execution
+CYCLES 1010
+CYCLE SIZE*1000000
+
+# random.seed 1234567890
+
+network.size SIZE
+simulation.endtime CYCLE*CYCLES
+simulation.logtime CYCLE
+
+protocol.lnk MyIdleProtocol
+
+# 根据轨迹数据初始化拓扑
+init.0 MyWireFromFile
+init.0.protocol lnk
+init.0.file InfoCom06.dat
+
+
+# 导出初始化的拓扑
+init.1 TopologyObserver
+init.1.linkable lnk
+init.1.log_file_name InfoCom06Topology
+
+control.0 TraceReaderControl
+control.0.linkable lnk
+control.0.file InfoCom06.dat
+control.0.step CYCLE
+
+control.1 TopologyObserver
+control.1.linkable lnk
+control.1.log_file_name InfoCom06Topology
+control.1.step CYCLE

@@ -1,0 +1,53 @@
+# network size
+SIZE 1000
+
+# parameters of periodic execution
+CYCLES 20000
+CYCLE SIZE*1000
+
+random.seed 1234567890
+
+network.size SIZE
+simulation.endtime CYCLE*CYCLES
+simulation.logtime CYCLE
+
+protocol.lnk MyIdleProtocol
+protocol.coord CoordinatesProtocol
+
+init.0 CoordinatesInitializer
+init.0.coord_protocol coord
+# 节点移动区域的大小（正方形）
+init.0.border 50
+
+# 根据随机初始化的坐标构建拓扑结构
+init.1 WireCoordinatesTopology
+init.1.protocol lnk
+init.1.coord_protocol coord
+# 感应距离
+init.1.interact_range 10
+
+# 导出初始化的拓扑
+init.2 TopologyObserver
+init.2.linkable lnk
+init.2.log_file_name GaussMarkovModelTopology
+init.2.coord_protocol coord
+init.2.start_time 0
+
+control.0 GaussMarkovModel
+control.0.linkable lnk
+control.0.coord_protocol coord
+# 感应距离
+control.0.interact_range 10
+# 移动区域的大小
+control.0.border 50
+# 高斯-马尔科夫模型中的权重值[0,1]
+control.0.alpha 0.3
+control.0.start_time 0
+control.0.step CYCLE
+
+control.1 TopologyObserver
+control.1.linkable lnk
+control.1.log_file_name GaussMarkovModelTopology
+control.1.coord_protocol coord
+control.1.star_time 0
+control.1.step CYCLE*2000

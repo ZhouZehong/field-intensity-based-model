@@ -1,0 +1,117 @@
+# 模拟网络的大小
+SIZE 5000
+
+# 模拟周期及每个周期的长度
+CYCLES 3030
+CYCLE SIZE*1000
+
+# 传输协议中有关传输延迟与数据丢失率的设置
+MINDELAY 0
+MAXDELAY 0
+DROP 0
+
+random.seed 1234567890
+
+network.size SIZE
+simulation.endtime CYCLE*CYCLES
+simulation.logtime CYCLE
+
+# MyLinkable协议，存储邻居信息
+protocol.lnk MyIdleProtocol
+
+# 传输协议
+protocol.urt UniformRandomTransport
+protocol.urt.mindelay MINDELAY
+protocol.urt.maxdelay MAXDELAY
+
+protocol.tr UnreliableTransport
+protocol.tr.transport urt
+protocol.tr.drop DROP
+
+# 信息协议
+protocol.ip field.protocol.InformationProtocol
+protocol.ip.linkable lnk
+protocol.ip.transport tr
+protocol.ip.method Flood
+
+# 信息协议、资源、用户兴趣的初始化
+init.0 field.initialize.Initializer
+init.0.information_protocol ip
+# 资源总量
+init.0.resource_num 50000
+# 资源大小上限
+init.0.max_resource_size 100
+# 资源评价值上限
+init.0.max_resource_value 10
+# 每个节点上的资源数量上限
+init.0.max_resource_per_node 5
+# 用户兴趣总量
+init.0.interest_num 500
+# 用户兴趣程度上限值
+init.0.max_interest_degree 10
+# 每个节点上的用户兴趣数量上限
+init.0.max_interest_per_node 5
+# 类别总数
+init.0.type_num 15
+# 是否为真实估计实验
+init.0.trace true
+# 统一带宽上限
+init.0.uniform_bandwidth 100000
+
+# 依据轨迹数据构建网络拓扑
+init.1 field.initialize.MyWireFromFile
+init.1.protocol lnk
+init.1.information_protocol ip
+init.1.file InfoCom06.dat
+
+# 依据初始化后的资源和用户兴趣构建信息场
+init.2 field.initialize.FieldConstructor
+init.2.information_protocol ip
+init.2.linkable lnk
+# 场强计算公式中的常量值k
+init.2.k 1
+# 信息场的极限大小，小于该值的信息场不再扩散
+init.2.decay_upper_limit 5
+
+# Query初始化，一次性将所有的query进行初始化
+# 但query开始进行转发的时间是均匀分布在整个模拟过程中的
+init.3 field.initialize.TraceQueryProducer
+init.3.information_protocol ip
+# message的最长存活时间
+init.3.message_life 75*CYCLE
+# message复制能力（依据场强进行累减）
+init.3.relay_time 0.5
+# query开始转发的时间跨度
+init.3.query_start_time_span 2727*CYCLE
+
+# 导出初始化的拓扑
+# init.4 TopologyObserver
+# init.4.linkable lnk
+# init.4.log_file_name InfoCom06Topology
+
+# 依据轨迹数据来对节点的邻居关系进行动态调整
+control.0 field.control.TraceReaderControl
+control.0.linkable lnk
+control.0.information_protocol ip
+control.0.file InfoCom06.dat
+control.0.start_time CYCLE
+control.0.step CYCLE
+
+# 依据动态邻居关系，在每个周期内对节点上的信息进行相关调整
+# 包括各种消息的重新发送与状态更新
+control.1 field.control.FloodCycleControl
+control.1.information_protocol ip
+control.1.linkable lnk
+control.1.start_time CYCLE
+control.1.decay 5
+control.1.step CYCLE
+
+# 将当前的评价指标情况打印
+control.2 field.control.ListenerObserver
+control.2.step CYCLE
+
+# 将当前的拓扑情况打印
+# control.3 TopologyObserver
+# control.3.linkable lnk
+# control.3.log_file_name InfoCom06Topology
+# control.3.step CYCLE
